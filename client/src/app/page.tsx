@@ -8,13 +8,31 @@ import { postsService } from "@/service/posts/posts";
 import { Post } from "@/service/types";
 import { useAuth } from "@/contexts/AuthContext";
 
+interface DummyPost {
+  id: number;
+  title: string;
+  body: string;
+  reactions: {
+    likes: number;
+    dislikes: number;
+  };
+}
+
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [dummyPosts, setDummyPosts] = useState<DummyPost[]>([]);
   const { user, isAuthenticated, isLoading: isLoadingAuth } = useAuth();
+
+  useEffect(() => {
+    fetch("https://dummyjson.com/posts?limit=5")
+      .then((res) => res.json())
+      .then((data) => setDummyPosts(data.posts))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!isLoadingAuth) {
@@ -173,6 +191,62 @@ export default function Home() {
             }}
           >
             <p style={{ fontSize: "1.125rem" }}>Nenhum post encontrado.</p>
+          </div>
+        )}
+
+        {dummyPosts.length > 0 && (
+          <div style={{ marginTop: "3rem" }}>
+            <h2
+              style={{
+                fontSize: "1.5rem",
+                fontWeight: "bold",
+                marginBottom: "1rem",
+                color: "var(--foreground)",
+              }}
+            >
+              Posts em Destaque
+            </h2>
+            {dummyPosts.map((dPost) => (
+              <div
+                key={dPost.id}
+                style={{
+                  background: "var(--card-bg)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "0.5rem",
+                  padding: "1.5rem",
+                  marginBottom: "1rem",
+                }}
+              >
+                <h3
+                  style={{
+                    fontSize: "1.1rem",
+                    fontWeight: "600",
+                    marginBottom: "0.5rem",
+                    color: "var(--foreground)",
+                  }}
+                >
+                  {dPost.title}
+                </h3>
+                <p
+                  style={{
+                    color: "var(--foreground)",
+                    opacity: 0.85,
+                    lineHeight: "1.6",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  {dPost.body}
+                </p>
+                <div style={{ display: "flex", gap: "1rem" }}>
+                  <span style={{ color: "var(--foreground)", fontWeight: 500 }}>
+                    👍 {dPost.reactions.likes} curtidas
+                  </span>
+                  <span style={{ color: "var(--foreground)", fontWeight: 500 }}>
+                    👎 {dPost.reactions.dislikes} descurtidas
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </main>
